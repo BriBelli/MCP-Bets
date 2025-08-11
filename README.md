@@ -1,4 +1,4 @@
-# pxs
+# BetAIPredict
 
 This project is a full-stack application that consists of a Python backend using Flask and a React frontend.
 
