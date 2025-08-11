@@ -1,6 +1,6 @@
 # BetAIPredict
 
-This project is a full-stack application that consists of a Python backend using Flask and a React frontend.
+Think of it as a hyper-personalized "betting oracle" that not only predicts but educates, engages, and monetizes users intelligently.
 
 ## Project Structure
 
