@@ -73,23 +73,28 @@ Then reload your shell:
 source ~/.zshrc
 ```
 
-### 3. Auth0 Configuration
+### 3. Authentication (Already Configured!)
 
-1. **Create Auth0 Application**:
-   - Go to [Auth0 Dashboard](https://manage.auth0.com/)
-   - Create a new Single Page Application
-   - Note your Domain and Client ID
+✅ **Auth0 is already set up and configured for this project!** You don't need to create your own Auth0 account.
 
-2. **Configure Application URLs**:
-   - **Allowed Callback URLs**: `http://localhost:3000/`
-   - **Allowed Logout URLs**: `http://localhost:3000/`
-   - **Allowed Web Origins**: `http://localhost:3000/`
+The project uses:
+- **Domain**: `dev-iep8px1emd3ipkkp.us.auth0.com` 
+- **Client ID**: `3Z6o8Yvey48FOeGHILCr9czwJ6iHuQpQ`
 
-3. **Generate Secrets**:
-   ```bash
-   # Generate AUTH0_SECRET
-   openssl rand -hex 32
-   ```
+**Just add your secrets to `~/.zshrc`:**
+```bash
+# Only these secrets are needed - get from team lead
+export OPENAI_API_KEY="your_openai_api_key"
+export AUTH0_SECRET="your_32_byte_secret" 
+export AUTH0_CLIENT_SECRET="your_auth0_client_secret"
+```
+
+**Generate AUTH0_SECRET:**
+```bash
+openssl rand -hex 32
+```
+
+> 💡 **For Team Leads**: If you need to create a new Auth0 application or modify settings, see the [Auth0 Setup Guide](#auth0-setup-for-team-leads) below.
 
 ### 4. Backend Setup
 
@@ -162,3 +167,31 @@ Application runs on `http://localhost:3000`
 ## 📄 License
 
 This project is licensed under the MIT License.
+
+---
+
+## 🔧 Auth0 Setup for Team Leads
+
+<details>
+<summary>Click to expand - Only needed if creating new Auth0 application</summary>
+
+If you need to create a new Auth0 application or modify existing settings:
+
+### 1. Create Auth0 Application
+- Go to [Auth0 Dashboard](https://manage.auth0.com/)
+- Create a new Single Page Application
+- Note your Domain and Client ID
+
+### 2. Configure Application URLs
+- **Allowed Callback URLs**: `http://localhost:3000/`
+- **Allowed Logout URLs**: `http://localhost:3000/`
+- **Allowed Web Origins**: `http://localhost:3000/`
+
+### 3. Update Environment Variables
+Update the values in `frontend/.env.local`:
+```bash
+REACT_APP_AUTH0_DOMAIN=your-new-domain.auth0.com
+REACT_APP_AUTH0_CLIENT_ID=your_new_client_id
+```
+
+</details>
