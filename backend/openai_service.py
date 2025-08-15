@@ -8,7 +8,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 
-def get_openai_completion(prompt: str, model: str = "gpt-3.5-turbo", max_tokens: int = 50):
+def get_openai_completion(prompt: str, model: str = "gpt-3.5-turbo", max_tokens: int = 300):
     if not prompt:
         return {"error": "Prompt is required.", "status_code": 400}
     try:
