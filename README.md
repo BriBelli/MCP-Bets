@@ -81,15 +81,20 @@ The project uses:
 - **Domain**: `dev-iep8px1emd3ipkkp.us.auth0.com` 
 - **Client ID**: `3Z6o8Yvey48FOeGHILCr9czwJ6iHuQpQ`
 
-**Just add your secrets to `~/.zshrc`:**
+**For basic development, only add to `~/.zshrc`:**
 ```bash
-# Only these secrets are needed - get from team lead
+# Required for OpenAI functionality
 export OPENAI_API_KEY="your_openai_api_key"
+```
+
+**Additional secrets (only needed for backend Auth0 integration):**
+```bash
+# Only add these if implementing backend token validation
 export AUTH0_SECRET="your_32_byte_secret" 
 export AUTH0_CLIENT_SECRET="your_auth0_client_secret"
 ```
 
-**Generate AUTH0_SECRET:**
+**Generate AUTH0_SECRET (if needed):**
 ```bash
 openssl rand -hex 32
 ```

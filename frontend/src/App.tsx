@@ -3,28 +3,23 @@ import './App.css';
 import { useState } from 'react';
 import { fetchOpenAI } from './services/openaiApi';
 import { useAuth0 } from '@auth0/auth0-react';
+import CustomLogin from './components/CustomLogin';
 
 const App: React.FC = () => {
   const [prompt, setPrompt] = useState<string>("");
   const [response, setResponse] = useState<string>("");
+  const [showLogin, setShowLogin] = useState<boolean>(false);
 
   const {
     isLoading, // Loading state, the SDK needs to reach Auth0 on load
     isAuthenticated,
     error,
-    loginWithRedirect: login, // Starts the login flow
     logout: auth0Logout, // Starts the logout flow
     user, // User profile
   } = useAuth0();
 
-  const signup = () =>
-    login({ authorizationParams: { screen_hint: "signup" } });
-
   const logout = () =>
     auth0Logout({ logoutParams: { returnTo: window.location.origin } });
-
-  const handleLogin = () => login();
-  const handleSignup = () => signup();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -65,14 +60,30 @@ const App: React.FC = () => {
           </details>
         </>
       ) : (
-        <div style={{ textAlign: 'center', marginTop: '50px' }}>
-          <h1>Welcome to BetAI Predict</h1>
-          {error && <p style={{ color: 'red' }}>Error: {error.message}</p>}
-          <div>
-            <button onClick={handleSignup} style={{ margin: '10px' }}>Sign Up</button>
-            <button onClick={handleLogin} style={{ margin: '10px' }}>Login</button>
+        <>
+          <div style={{ textAlign: 'center', marginTop: '50px' }}>
+            <h1>Welcome to BetAI Predict</h1>
+            {error && <p style={{ color: 'red' }}>Error: {error.message}</p>}
+            <div>
+              <button onClick={() => setShowLogin(true)} style={{ 
+                margin: '10px', 
+                padding: '12px 24px',
+                fontSize: '16px',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}>
+                Get Started
+              </button>
+            </div>
           </div>
-        </div>
+
+          {showLogin && (
+            <CustomLogin onClose={() => setShowLogin(false)} />
+          )}
+        </>
       )}
     </div>
   );
