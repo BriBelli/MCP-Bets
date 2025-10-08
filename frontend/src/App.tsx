@@ -1,6 +1,6 @@
 
 import './App.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { fetchOpenAI } from './services/openaiApi';
 import { useAuth0 } from '@auth0/auth0-react';
 import CustomLogin from './components/CustomLogin';
@@ -9,6 +9,7 @@ const App: React.FC = () => {
   const [prompt, setPrompt] = useState<string>("");
   const [response, setResponse] = useState<string>("");
   const [showLogin, setShowLogin] = useState<boolean>(false);
+  const [customAuthUser, setCustomAuthUser] = useState<any>(null);
 
   const {
     isLoading, // Loading state, the SDK needs to reach Auth0 on load
@@ -18,8 +19,48 @@ const App: React.FC = () => {
     user, // User profile
   } = useAuth0();
 
-  const logout = () =>
-    auth0Logout({ logoutParams: { returnTo: window.location.origin } });
+  // Check for custom authentication tokens on app load
+  useEffect(() => {
+    const checkCustomAuth = () => {
+      const tokenKey = `@@auth0spajs@@::${process.env.REACT_APP_AUTH0_CLIENT_ID}::${process.env.REACT_APP_AUTH0_DOMAIN}::openid profile email`;
+      const storedTokens = localStorage.getItem(tokenKey);
+      const storedUser = localStorage.getItem('custom_auth_user');
+      
+      if (storedTokens && storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setCustomAuthUser(parsedUser);
+          console.log('Custom auth user found:', parsedUser);
+        } catch (error) {
+          console.error('Error parsing stored user:', error);
+          localStorage.removeItem(tokenKey);
+          localStorage.removeItem('custom_auth_user');
+        }
+      }
+    };
+
+    checkCustomAuth();
+  }, []);
+
+  // Combined authentication check
+  const isUserAuthenticated = isAuthenticated || customAuthUser;
+  const currentUser = user || customAuthUser;
+
+  const logout = () => {
+    // Clear custom auth data
+    const tokenKey = `@@auth0spajs@@::${process.env.REACT_APP_AUTH0_CLIENT_ID}::${process.env.REACT_APP_AUTH0_DOMAIN}::openid profile email`;
+    localStorage.removeItem(tokenKey);
+    localStorage.removeItem('custom_auth_user');
+    setCustomAuthUser(null);
+    
+    // Also logout from Auth0 SDK if applicable
+    if (isAuthenticated) {
+      auth0Logout({ logoutParams: { returnTo: window.location.origin } });
+    } else {
+      // Just reload the page to reset state
+      window.location.reload();
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -32,14 +73,14 @@ const App: React.FC = () => {
 
   return (
     <div>
-      {isAuthenticated ? (
+      {isUserAuthenticated ? (
         <>
           <header style={{ marginBottom: '20px', padding: '10px', borderBottom: '1px solid #ccc' }}>
-            <p>Logged in as {user?.email}</p>
+            <p>Logged in as {currentUser?.email}</p>
             <button onClick={logout}>Logout</button>
           </header>
 
-          <h1>BetAI Predict - OpenAI Prompt</h1>
+          <h1>MCP Bets - AI Betting Intelligence</h1>
           <form onSubmit={handleSubmit}>
             <input
               type="text"
@@ -62,8 +103,7 @@ const App: React.FC = () => {
       ) : (
         <>
           <div style={{ textAlign: 'center', marginTop: '50px' }}>
-            <h1>Welcome to BetAI Predict</h1>
-            {error && <p style={{ color: 'red' }}>Error: {error.message}</p>}
+            <h1>Welcome to MCP Bets</h1>
             <div>
               <button onClick={() => setShowLogin(true)} style={{ 
                 margin: '10px', 
