@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { Auth0TokenResponse, Auth0ErrorResponse, Auth0UserProfile, LoginCredentials } from '../types/auth';
+import { STORAGE_KEYS } from '../utils/auth';
 import './CustomLogin.css';
 
 interface CustomLoginProps {
@@ -8,11 +9,6 @@ interface CustomLoginProps {
 }
 
 type ViewMode = 'login' | 'signup' | 'forgot-password';
-
-const STORAGE_KEYS = {
-  TOKENS: `@@auth0spajs@@::${process.env.REACT_APP_AUTH0_CLIENT_ID}::${process.env.REACT_APP_AUTH0_DOMAIN}::openid profile email`,
-  USER: 'custom_auth_user'
-} as const;
 
 const CustomLogin: React.FC<CustomLoginProps> = ({ onClose }) => {
   const { loginWithRedirect } = useAuth0();
@@ -53,9 +49,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onClose }) => {
       const auth0Domain = process.env.REACT_APP_AUTH0_DOMAIN;
       const clientId = process.env.REACT_APP_AUTH0_CLIENT_ID;
 
-      console.log('Attempting direct login with:', { auth0Domain, clientId, email });
+      if (!auth0Domain || !clientId) {
+        throw new Error('Auth0 configuration is missing');
+      }
 
-      // Step 1: Try different connection names
+      // Try different connection names in order of preference
       const connectionNames = [
         'Username-Password-Authentication',
         'email', 
@@ -68,9 +66,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onClose }) => {
       let lastError;
 
       for (const connectionName of connectionNames) {
-        console.log(`Trying connection: ${connectionName || 'default'}`);
-        
-        const requestBody: any = {
+        const requestBody: Record<string, string> = {
           grant_type: 'password',
           username: email,
           password: password,
@@ -91,19 +87,16 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onClose }) => {
         });
 
         authData = await authResponse.json();
-        console.log(`Auth response (${connectionName || 'default'}):`, authResponse.status, authData);
 
         if (authResponse.ok) {
-          console.log('✅ Success with connection:', connectionName || 'default');
           break; // Success! Exit the loop
         } else {
           lastError = authData;
-          console.log(`❌ Failed with connection: ${connectionName || 'default'} - ${authData.error_description}`);
         }
       }
 
       if (!authResponse || !authResponse.ok) {
-        throw new Error(lastError?.error_description || 'All connection attempts failed');
+        throw new Error(lastError?.error_description || 'Authentication failed');
       }
 
       // Step 2: Get user profile
@@ -118,30 +111,22 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onClose }) => {
       }
 
       const userData = await userResponse.json();
-      console.log('User data:', userData);
       
-      // Step 3: Authentication successful! Store tokens and user data
-      console.log('✅ Direct authentication successful!');
-      
-      // Store the tokens in localStorage (Auth0 SDK compatible format)
-      const tokenKey = `@@auth0spajs@@::${process.env.REACT_APP_AUTH0_CLIENT_ID}::${process.env.REACT_APP_AUTH0_DOMAIN}::openid profile email`;
+      // Step 3: Store authentication data and complete login
+      const expirationTime = Date.now() + (authData.expires_in * 1000);
       const tokenData = {
         access_token: authData.access_token,
         id_token: authData.id_token,
         expires_in: authData.expires_in,
+        expires_at: expirationTime,
         token_type: authData.token_type,
         scope: authData.scope
       };
       
-      localStorage.setItem(tokenKey, JSON.stringify(tokenData));
+      localStorage.setItem(STORAGE_KEYS.TOKENS, JSON.stringify(tokenData));
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
       
-      // Store user data separately for our custom auth check
-      localStorage.setItem('custom_auth_user', JSON.stringify(userData));
-      
-      // Close modal and let the app detect the authentication
       onClose();
-      
-      // Trigger a page reload to let the app pick up the stored tokens and user data
       window.location.reload();
       
     } catch (error) {
@@ -166,9 +151,12 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onClose }) => {
 
   const handlePasswordReset = async () => {
     try {
-      // Use Auth0's password reset API
       const auth0Domain = process.env.REACT_APP_AUTH0_DOMAIN;
       const clientId = process.env.REACT_APP_AUTH0_CLIENT_ID;
+      
+      if (!auth0Domain || !clientId) {
+        throw new Error('Auth0 configuration is missing');
+      }
       
       const response = await fetch(`https://${auth0Domain}/dbconnections/change_password`, {
         method: 'POST',
@@ -178,7 +166,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onClose }) => {
         body: JSON.stringify({
           client_id: clientId,
           email: email,
-          connection: 'Username-Password-Authentication', // Default Auth0 database connection
+          connection: 'Username-Password-Authentication',
         }),
       });
 
@@ -188,8 +176,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onClose }) => {
         throw new Error('Failed to send reset email');
       }
     } catch (error) {
-      console.error('Password reset error:', error);
-      // You might want to show an error message to the user here
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send reset email';
+      setError(errorMessage);
     }
   };
 

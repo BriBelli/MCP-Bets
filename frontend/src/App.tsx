@@ -3,13 +3,15 @@ import './App.css';
 import { useState, useEffect } from 'react';
 import { fetchOpenAI } from './services/openaiApi';
 import { useAuth0 } from '@auth0/auth0-react';
+import { CustomAuthUser } from './types/auth';
+import { isValidAuthData, getStoredUser, clearAuthData } from './utils/auth';
 import CustomLogin from './components/CustomLogin';
 
 const App: React.FC = () => {
   const [prompt, setPrompt] = useState<string>("");
   const [response, setResponse] = useState<string>("");
   const [showLogin, setShowLogin] = useState<boolean>(false);
-  const [customAuthUser, setCustomAuthUser] = useState<any>(null);
+  const [customAuthUser, setCustomAuthUser] = useState<CustomAuthUser | null>(null);
 
   const {
     isLoading, // Loading state, the SDK needs to reach Auth0 on load
@@ -21,21 +23,16 @@ const App: React.FC = () => {
 
   // Check for custom authentication tokens on app load
   useEffect(() => {
-    const checkCustomAuth = () => {
-      const tokenKey = `@@auth0spajs@@::${process.env.REACT_APP_AUTH0_CLIENT_ID}::${process.env.REACT_APP_AUTH0_DOMAIN}::openid profile email`;
-      const storedTokens = localStorage.getItem(tokenKey);
-      const storedUser = localStorage.getItem('custom_auth_user');
-      
-      if (storedTokens && storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser);
-          setCustomAuthUser(parsedUser);
-          console.log('Custom auth user found:', parsedUser);
-        } catch (error) {
-          console.error('Error parsing stored user:', error);
-          localStorage.removeItem(tokenKey);
-          localStorage.removeItem('custom_auth_user');
+    const checkCustomAuth = (): void => {
+      if (isValidAuthData()) {
+        const user = getStoredUser();
+        if (user) {
+          setCustomAuthUser(user);
         }
+      } else {
+        // Clear invalid or expired data
+        clearAuthData();
+        setCustomAuthUser(null);
       }
     };
 
@@ -46,11 +43,9 @@ const App: React.FC = () => {
   const isUserAuthenticated = isAuthenticated || customAuthUser;
   const currentUser = user || customAuthUser;
 
-  const logout = () => {
+  const logout = (): void => {
     // Clear custom auth data
-    const tokenKey = `@@auth0spajs@@::${process.env.REACT_APP_AUTH0_CLIENT_ID}::${process.env.REACT_APP_AUTH0_DOMAIN}::openid profile email`;
-    localStorage.removeItem(tokenKey);
-    localStorage.removeItem('custom_auth_user');
+    clearAuthData();
     setCustomAuthUser(null);
     
     // Also logout from Auth0 SDK if applicable
