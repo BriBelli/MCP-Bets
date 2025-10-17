@@ -1,7 +1,9 @@
+'use client';
+
 import React, { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { Auth0TokenResponse, Auth0ErrorResponse, Auth0UserProfile, LoginCredentials } from '../types/auth';
-import { STORAGE_KEYS } from '../utils/auth';
+import { Auth0TokenResponse, Auth0ErrorResponse, Auth0UserProfile, LoginCredentials } from '@/types/auth';
+import { STORAGE_KEYS } from '@/utils/auth';
 import './CustomLogin.css';
 
 interface CustomLoginProps {
@@ -46,8 +48,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onClose }) => {
 
   const handleDirectLogin = async () => {
     try {
-      const auth0Domain = process.env.REACT_APP_AUTH0_DOMAIN;
-      const clientId = process.env.REACT_APP_AUTH0_CLIENT_ID;
+      const auth0Domain = process.env.NEXT_PUBLIC_AUTH0_DOMAIN;
+      const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID;
 
       if (!auth0Domain || !clientId) {
         throw new Error('Auth0 configuration is missing');
@@ -151,8 +153,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onClose }) => {
 
   const handlePasswordReset = async () => {
     try {
-      const auth0Domain = process.env.REACT_APP_AUTH0_DOMAIN;
-      const clientId = process.env.REACT_APP_AUTH0_CLIENT_ID;
+      const auth0Domain = process.env.NEXT_PUBLIC_AUTH0_DOMAIN;
+      const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID;
       
       if (!auth0Domain || !clientId) {
         throw new Error('Auth0 configuration is missing');
