@@ -159,7 +159,7 @@ BetAIPredict/
 └── README.md                        # This file
 ```
 
-## � Complete Setup Guide (Phase 1)
+## Complete Setup Guide (Phase 1)
 
 This guide covers everything needed to run the complete MCP Bets data pipeline (Phases 1.1-1.6).
 
