@@ -20,7 +20,7 @@ class Embedding(Base, TimestampMixin):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     embedding = Column(Vector(3072), nullable=False)  # OpenAI text-embedding-3-large dimension
     document_chunk = Column(Text, nullable=False)
-    metadata = Column(JSONB, nullable=False)  # Flexible metadata storage
+    meta = Column(JSONB, nullable=False)  # Flexible metadata storage (renamed from 'metadata' to avoid SQLAlchemy conflict)
     
     # Metadata structure example:
     # {
@@ -37,5 +37,5 @@ class Embedding(Base, TimestampMixin):
     # }
     
     def __repr__(self):
-        data_type = self.metadata.get("data_type", "unknown") if self.metadata else "unknown"
+        data_type = self.meta.get("data_type", "unknown") if self.meta else "unknown"
         return f"<Embedding {data_type} - {self.document_chunk[:50]}...>"

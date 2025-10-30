@@ -63,23 +63,36 @@ def enable_pgvector():
         print("✅ pgvector extension enabled successfully")
         return True
     except Exception as e:
-        print(f"❌ Failed to enable pgvector: {e}")
-        return False
+        print(f"⚠️  pgvector extension not available: {e}")
+        print("⚠️  Phase 2 (RAG) will require pgvector, but Phase 1 will work without it")
+        print("⚠️  Continuing with database initialization...")
+        return False  # Return False but don't fail the whole init
 
 
-def create_all_tables():
+def create_all_tables(pgvector_enabled=False):
     """Create all tables defined in models"""
     print("\nCreating database tables...")
     try:
-        Base.metadata.create_all(bind=engine)
-        print("✅ All tables created successfully")
+        if not pgvector_enabled:
+            # Skip embeddings table if pgvector not available (Phase 2 only)
+            print("⚠️  Skipping 'embeddings' table (pgvector required, Phase 2 only)")
+            tables_to_create = [
+                table for table in Base.metadata.sorted_tables 
+                if table.name != "embeddings"
+            ]
+            for table in tables_to_create:
+                table.create(bind=engine, checkfirst=True)
+        else:
+            Base.metadata.create_all(bind=engine)
+        
+        print("✅ All Phase 1 tables created successfully")
         return True
     except Exception as e:
         print(f"❌ Failed to create tables: {e}")
         return False
 
 
-def verify_tables():
+def verify_tables(pgvector_enabled=False):
     """Verify all expected tables exist"""
     print("\nVerifying database schema...")
     
@@ -91,12 +104,17 @@ def verify_tables():
         "injuries",
         "player_game_stats",
         "player_props",
-        "embeddings",
         "judges_performance",
         "cache_entries",
         "api_requests",
         "api_keys",
     ]
+    
+    # Only expect embeddings table if pgvector is enabled
+    if pgvector_enabled:
+        expected_tables.append("embeddings")
+    else:
+        print("⚠️  Not expecting 'embeddings' table (pgvector disabled, Phase 2 only)")
     
     inspector = inspect(engine)
     existing_tables = inspector.get_table_names()
@@ -111,7 +129,7 @@ def verify_tables():
         print(f"\n❌ Missing tables: {', '.join(missing_tables)}")
         return False
     
-    print("\n✅ All expected tables exist")
+    print(f"\n✅ All expected Phase 1 tables exist ({len(expected_tables)} tables)")
     return True
 
 
@@ -158,19 +176,21 @@ def main():
     print("MCP BETS - DATABASE INITIALIZATION")
     print("="*80)
     
-    # Step 1: Check/Enable pgvector
+    # Step 1: Check/Enable pgvector (optional for Phase 1)
+    pgvector_enabled = False
     if not check_pgvector_extension():
-        if not enable_pgvector():
-            print("\n❌ Database initialization FAILED")
-            return False
+        pgvector_enabled = enable_pgvector()
+        # Don't fail if pgvector isn't available - it's only needed for Phase 2
+    else:
+        pgvector_enabled = True
     
-    # Step 2: Create tables
-    if not create_all_tables():
+    # Step 2: Create tables (pass pgvector flag)
+    if not create_all_tables(pgvector_enabled=pgvector_enabled):
         print("\n❌ Database initialization FAILED")
         return False
     
-    # Step 3: Verify tables
-    if not verify_tables():
+    # Step 3: Verify tables (pass pgvector flag)
+    if not verify_tables(pgvector_enabled=pgvector_enabled):
         print("\n❌ Database initialization FAILED")
         return False
     
