@@ -18,7 +18,7 @@ class Embedding(Base, TimestampMixin):
     __tablename__ = "embeddings"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    embedding = Column(Vector(3072), nullable=False)  # OpenAI text-embedding-3-large dimension
+    embedding = Column(Vector(1536), nullable=False)  # OpenAI text-embedding-3-small dimension (HNSW compatible)
     document_chunk = Column(Text, nullable=False)
     meta = Column(JSONB, nullable=False)  # Flexible metadata storage (renamed from 'metadata' to avoid SQLAlchemy conflict)
     
