@@ -29,7 +29,7 @@ class EmbeddingsService:
     
     def __init__(self, settings: Optional[Settings] = None):
         self.settings = settings or Settings()
-        self.client = AsyncOpenAI(api_key=self.settings.openai_api_key)
+        self.client = AsyncOpenAI(api_key=self.settings.OPENAI_API_KEY)
         
         # Model configuration
         self.model = "text-embedding-3-small"

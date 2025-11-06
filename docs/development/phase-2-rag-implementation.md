@@ -1,8 +1,15 @@
 # Phase 2: RAG Knowledge Base Implementation
 
-**Status**: Ready to begin (Phase 1 complete ✅)  
-**Timeline**: Week 1-4  
+**Status**: In Progress (Phase 1 complete ✅)  
 **Goal**: Build production-grade RAG system for semantic search across SportsDataIO data
+
+---
+
+## Current Season Context
+
+- **Active Season**: 2025 NFL Season (Week 9 as of Oct 31, 2025)
+- **Data Priority**: 2025 season (current/live) + 2024 season (historical trends)
+- **Update Frequency**: Real-time props/injuries, daily stats, historical reference
 
 ---
 
@@ -28,9 +35,9 @@ SportsDataIO APIs → Data Ingestion → Document Chunking →
 
 ## Phase 2 Objectives
 
-### Week 1: Core RAG Infrastructure
+### Phase 2-1: Core RAG Infrastructure
 
-**1. pgvector Installation** (Day 1-2)
+**2-1-1. pgvector Installation**
 - **Issue**: Current pgvector (0.8.1) built for PostgreSQL 17/18, we're on 14
 - **Solution Options**:
   - Option A: Compile pgvector from source for PostgreSQL 14
@@ -38,7 +45,7 @@ SportsDataIO APIs → Data Ingestion → Document Chunking →
   - Option C: Use Pinecone/Weaviate (external vector DB, +$50/month)
 - **Recommendation**: Option A (compile from source) - keeps costs low, PostgreSQL 14 stable
 
-**2. Embeddings Table Schema** (Day 2-3)
+**2-1-2. Embeddings Table Schema**
 ```sql
 -- Already defined in backend/mcp_bets/models/embedding.py
 CREATE TABLE embeddings (
@@ -77,7 +84,7 @@ CREATE INDEX embeddings_metadata_idx
 }
 ```
 
-**3. Document Chunking Service** (Day 3-5)
+**2-1-3. Document Chunking Service**
 ```python
 # backend/mcp_bets/services/rag/document_chunker.py
 
@@ -127,7 +134,7 @@ class DocumentChunker:
         pass
 ```
 
-**4. Embeddings Service** (Day 5-7)
+**2-1-4. Embeddings Service**
 ```python
 # backend/mcp_bets/services/rag/embeddings_service.py
 
@@ -172,9 +179,9 @@ class EmbeddingsService:
         return [item.embedding for item in response.data]
 ```
 
-### Week 2: Semantic Search Implementation
+### Phase 2-2: Semantic Search Implementation
 
-**5. Vector Similarity Search** (Day 8-10)
+**2-2-1. Vector Similarity Search**
 ```python
 # backend/mcp_bets/services/rag/semantic_search.py
 
@@ -237,7 +244,7 @@ class SemanticSearchService:
         return [RetrievedChunk(**row) for row in results]
 ```
 
-**6. Context Augmentation** (Day 10-12)
+**2-2-2. Context Augmentation**
 ```python
 # backend/mcp_bets/services/rag/context_builder.py
 
@@ -316,24 +323,27 @@ class ContextBuilder:
         return "\n".join(output)
 ```
 
-### Week 3: Knowledge Base Hydration
+### Phase 2-3: Knowledge Base Hydration
 
-**7. Initial Data Import** (Day 13-16)
+**2-3-1. Initial Data Import**
 ```python
 # backend/scripts/hydrate_knowledge_base.py
 
-async def hydrate_2024_season():
+async def hydrate_knowledge_base(seasons: List[int] = [2025, 2024]):
     """
-    Initial batch import: Generate embeddings for all 2024 data
+    Initial batch import: Generate embeddings for current + historical season data
     
-    Target volumes:
+    Args:
+        seasons: List of seasons to import (default: 2025 current + 2024 historical)
+    
+    Target volumes (per season):
     - 50K+ player-game context embeddings
-    - 10K+ injury report embeddings
+    - 10K+ injury report embeddings  
     - 5K+ matchup analytics embeddings
     - 100K+ game log embeddings
     
-    Estimated cost: ~$8-10 for embeddings generation
-    Estimated time: 2-4 hours (rate-limited by OpenAI API)
+    Estimated cost: ~$10-15 per season for embeddings generation
+    Estimated time: 2-4 hours per season (rate-limited by OpenAI API)
     """
     
     chunker = DocumentChunker()
@@ -351,7 +361,8 @@ async def hydrate_2024_season():
     
     # Step 2: Chunk all game logs
     print("Chunking game logs...")
-    stats = await db.execute(select(PlayerGameStats).where(season=2024))
+    for season in seasons:
+        stats = await db.execute(select(PlayerGameStats).where(season=season))
     for stat in stats:
         chunks = await chunker.chunk_game_log(stat)
         embeddings = await embeddings_service.generate_batch(
@@ -363,7 +374,7 @@ async def hydrate_2024_season():
     # ... (similar pattern)
 ```
 
-**8. Auto-Sync Strategy** (Day 16-18)
+**2-3-2. Auto-Sync Strategy**
 ```python
 # backend/mcp_bets/services/rag/sync_scheduler.py
 
@@ -392,9 +403,9 @@ class KnowledgeBaseSyncScheduler:
         pass
 ```
 
-### Week 4: Testing & Optimization
+### Phase 2-4: Testing & Optimization
 
-**9. End-to-End RAG Test** (Day 19-21)
+**2-4-1. End-to-End RAG Test**
 ```python
 # backend/tests/test_rag_pipeline.py
 
@@ -432,7 +443,7 @@ async def test_rag_retrieval_quality():
     assert "4/4 games" in context.text
 ```
 
-**10. Performance Optimization** (Day 21-28)
+**2-4-2. Performance Optimization**
 - HNSW index tuning (m=16, ef_construction=64)
 - Query plan analysis (EXPLAIN ANALYZE)
 - Connection pooling optimization
@@ -473,13 +484,13 @@ Phase 2 complete when:
 
 ## Next Phase Preview
 
-**Phase 3: Multi-LLM Judges** (Week 5-8)
+**Phase 3: Multi-LLM Judges**
 - Each Judge receives augmented prompts from RAG
 - Independent analysis using Five Pillars framework
 - Cross-reference engine weighs Judge consensus
 - Output: Ultra Lock / Super Lock / Standard Lock / Lotto / Mega Lotto
 
-**Phase 4: MCP Agent Orchestration** (Week 9-12)
+**Phase 4: MCP Agent Orchestration**
 - Weather Agent queries weather embeddings
 - Injury Agent queries injury embeddings
 - Player Profile Agent queries player embeddings

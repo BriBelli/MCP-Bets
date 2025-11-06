@@ -1,8 +1,8 @@
-# Phase 2 RAG Implementation - Completion Summary
+# Phase 2-1: RAG Core Infrastructure - Completion Summary
 
-**Date**: October 30, 2025  
+**Date**: October 30-31, 2025  
 **Status**: ✅ Core RAG pipeline complete  
-**Progress**: Week 1 of 4-week plan COMPLETE
+**Phase**: 2-1 (RAG Infrastructure) COMPLETE
 
 ---
 
@@ -35,12 +35,12 @@
     "player_id": "uuid",
     "player_name": "First Last",
     "team_id": "uuid",
-    "season": 2024,
-    "week": 18,
+    "season": 2025,  # Current season
+    "week": 9,       # Current week
     "opponent_id": "uuid",
     "confidence_score": 0.95,
     "source": "sportsdata.io",
-    "last_verified": "2024-10-30T..."
+    "last_verified": "2025-10-31T..."
 }
 ```
 
@@ -108,10 +108,12 @@ CREATE INDEX idx_embeddings_meta_gin ON embeddings USING gin (meta);
 
 ### Environment Variables
 ```bash
-# .env file
+# Environment variables (set in system or .env file)
 DATABASE_URL=postgresql+psycopg://brian@localhost:5432/mcp_bets
-OPENAI_API_KEY=your-openai-api-key-here
-SPORTSDATAIO_API_KEY=7c89b4f83cdc4da0ae4c...
+OPENAI_API_KEY=sk-proj-...your-key...
+ANTHROPIC_API_KEY=sk-ant-...your-key...
+GEMINI_API_KEY=...your-key...
+SPORTSDATAIO_API_KEY=...your-key...
 ```
 
 ### Chunking Parameters
@@ -129,7 +131,7 @@ DocumentChunker(
 SemanticSearch.search(
     query="Bijan Robinson rushing yards",
     top_k=10,
-    filters={"season": 2024, "position": "RB"},
+    filters={"season": 2025, "position": "RB"},  # Current season
     min_similarity=0.7,
     rerank=True
 )
@@ -152,7 +154,7 @@ semantic_search = SemanticSearch(db_session, embeddings_service)
 # 2. Chunk player data
 player = await db.get_player_by_name("Bijan Robinson")
 recent_stats = await db.get_recent_stats(player.id, limit=5)
-chunks = chunker.chunk_player_profile(player, season=2024, recent_stats=recent_stats)
+chunks = chunker.chunk_player_profile(player, season=2025, recent_stats=recent_stats)
 
 # 3. Generate embeddings
 embeddings = await embeddings_service.generate_batch(chunks)
@@ -169,7 +171,7 @@ for chunk, embedding in embeddings:
 results = await semantic_search.search(
     query="Bijan Robinson Over 100.5 Combined Yards",
     top_k=5,
-    filters={"player_name": "Bijan Robinson", "season": 2024}
+    filters={"player_name": "Bijan Robinson", "season": 2025}  # Current season
 )
 
 # 6. Retrieve context for LLM
@@ -230,8 +232,14 @@ backend/scripts/
 
 ## 🔜 Next Steps (Weeks 2-4)
 
-### Week 2: Data Hydration
-- [ ] Create batch import script for 2024 season
+### Phase 2-2: Semantic Search (Next)
+
+- [ ] Implement vector similarity search with pgvector
+- [ ] Build context augmentation for LLM prompts
+- [ ] Test retrieval quality with sample queries
+
+### Phase 2-3: Data Hydration
+- [ ] Create batch import script for 2025 season (+ 2024 historical)
 - [ ] Import all teams → players → games → stats
 - [ ] Generate embeddings for ~50K chunks
 - [ ] Verify search quality with sample queries
@@ -257,7 +265,7 @@ backend/scripts/
 
 1. **Retrieval Quality**: >70% similarity for relevant results
 2. **Search Latency**: <500ms for top-10 results
-3. **Coverage**: ~50K embeddings covering 2024 season
+3. **Coverage**: ~50K embeddings per season (2025 current + 2024 historical)
 4. **Cost**: <$100/month for embeddings + updates
 5. **Freshness**: Props updated every 5 minutes during game days
 
@@ -281,4 +289,4 @@ backend/scripts/
 
 ---
 
-**Status**: Ready for Week 2 (Data Hydration) 🚀
+**Status**: Ready for Phase 2-2 (Semantic Search) 🚀

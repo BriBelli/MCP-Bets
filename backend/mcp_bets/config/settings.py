@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     # ========================================================================
     SPORTSDATAIO_API_KEY: str = Field(..., env="SPORTSDATAIO_API_KEY")
     SPORTSDATAIO_BASE_URL: str = Field(
-        default="https://api.sportsdata.io/v3/nfl",
+        default="https://api.sportsdata.io/v3/nfl/",
         env="SPORTSDATAIO_BASE_URL"
     )
     SPORTSDATAIO_REQUESTS_PER_SECOND: int = Field(default=2, env="SPORTSDATAIO_REQUESTS_PER_SECOND")

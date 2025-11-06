@@ -151,10 +151,12 @@ class SemanticSearch:
         results = results[:top_k]
         
         elapsed_time = (time.time() - start_time) * 1000  # Convert to ms
+        query_preview = query[:50].replace('{', '{{').replace('}', '}}')
+        top_sim = f"{results[0].similarity:.3f}" if results else "0.000"
         logger.info(
             f"Search completed in {elapsed_time:.1f}ms: "
-            f"query='{query[:50]}...', results={len(results)}, "
-            f"top_similarity={results[0].similarity:.3f if results else 0}"
+            f"query='{query_preview}...', results={len(results)}, "
+            f"top_similarity={top_sim}"
         )
         
         return results
@@ -398,10 +400,11 @@ class SemanticSearch:
         total_embeddings = result.scalar()
         
         # Get data type distribution
+        data_type_col = Embedding.meta["data_type"].astext.label("data_type")
         type_stmt = select(
-            Embedding.meta["data_type"].astext.label("data_type"),
+            data_type_col,
             func.count().label("count")
-        ).group_by(Embedding.meta["data_type"].astext)
+        ).group_by(data_type_col)
         
         result = await self.session.execute(type_stmt)
         type_distribution = {row.data_type: row.count for row in result.all()}

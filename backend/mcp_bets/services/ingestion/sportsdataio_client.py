@@ -241,7 +241,7 @@ class SportsDataIOClient:
         Returns:
             List of game objects
         """
-        return await self._request(f"Scores/{season}")
+        return await self._request(f"scores/json/Scores/{season}")
     
     async def get_schedules_by_week(
         self,
@@ -258,7 +258,7 @@ class SportsDataIOClient:
         Returns:
             List of game objects
         """
-        return await self._request(f"ScoresByWeek/{season}/{week}")
+        return await self._request(f"scores/json/ScoresByWeek/{season}/{week}")
     
     async def get_current_week(self) -> int:
         """
@@ -291,7 +291,7 @@ class SportsDataIOClient:
         Returns:
             List of team objects with details (name, city, conference, division)
         """
-        return await self._request("Teams")
+        return await self._request("scores/json/Teams")
     
     async def get_team_by_key(self, team_key: str) -> Dict[str, Any]:
         """
@@ -309,6 +309,42 @@ class SportsDataIOClient:
                 return team
         raise SportsDataIOError(f"Team not found: {team_key}")
     
+    async def get_standings(self, season: int) -> List[Dict[str, Any]]:
+        """
+        Get team standings for a season
+        
+        Args:
+            season: NFL season year (e.g., 2025)
+        
+        Returns:
+            List of team standing objects with wins, losses, division/conference records
+        
+        Example response:
+            [
+                {
+                    "SeasonType": 1,
+                    "Season": 2025,
+                    "Conference": "AFC",
+                    "Division": "East",
+                    "Team": "NE",
+                    "Name": "New England Patriots",
+                    "Wins": 6,
+                    "Losses": 2,
+                    "Ties": 0,
+                    "Percentage": 0.75,
+                    "PointsFor": 213,
+                    "PointsAgainst": 146,
+                    "NetPoints": 67,
+                    "DivisionWins": 2,
+                    "ConferenceWins": 4,
+                    "DivisionRank": 1,
+                    "ConferenceRank": 2,
+                    ...
+                }
+            ]
+        """
+        return await self._request(f"scores/json/Standings/{season}")
+    
     # =========================================================================
     # Players
     # =========================================================================
@@ -320,7 +356,7 @@ class SportsDataIOClient:
         Returns:
             List of player objects
         """
-        return await self._request("Players")
+        return await self._request("scores/json/Players")
     
     async def get_players_by_team(self, team_key: str) -> List[Dict[str, Any]]:
         """
@@ -332,7 +368,7 @@ class SportsDataIOClient:
         Returns:
             List of player objects
         """
-        return await self._request(f"Players/{team_key}")
+        return await self._request(f"scores/json/Players/{team_key}")
     
     async def get_free_agents(self) -> List[Dict[str, Any]]:
         """
@@ -341,7 +377,7 @@ class SportsDataIOClient:
         Returns:
             List of free agent player objects
         """
-        return await self._request("FreeAgents")
+        return await self._request("scores/json/FreeAgents")
     
     # =========================================================================
     # Player Stats
@@ -362,7 +398,7 @@ class SportsDataIOClient:
         Returns:
             List of player stat objects
         """
-        return await self._request(f"PlayerGameStatsByWeek/{season}/{week}")
+        return await self._request(f"stats/json/PlayerGameStatsByWeek/{season}/{week}")
     
     async def get_player_game_stats_by_player(
         self,
@@ -381,7 +417,7 @@ class SportsDataIOClient:
         Returns:
             Player stat object
         """
-        return await self._request(f"PlayerGameStatsByPlayerID/{season}/{week}/{player_id}")
+        return await self._request(f"stats/json/PlayerGameStatsByPlayerID/{season}/{week}/{player_id}")
     
     async def get_player_season_stats(
         self,
@@ -396,7 +432,7 @@ class SportsDataIOClient:
         Returns:
             List of player season stat objects
         """
-        return await self._request(f"PlayerSeasonStats/{season}")
+        return await self._request(f"stats/json/PlayerSeasonStats/{season}")
     
     # =========================================================================
     # Injuries
@@ -417,7 +453,7 @@ class SportsDataIOClient:
         Returns:
             List of injury report objects
         """
-        return await self._request(f"Injuries/{season}/{week}")
+        return await self._request(f"scores/json/Injuries/{season}/{week}")
     
     async def get_injuries_by_team(
         self,
@@ -436,7 +472,7 @@ class SportsDataIOClient:
         Returns:
             List of injury report objects
         """
-        return await self._request(f"Injuries/{season}/{week}/{team_key}")
+        return await self._request(f"scores/json/Injuries/{season}/{week}/{team_key}")
     
     # =========================================================================
     # Player Props & Betting
@@ -457,7 +493,7 @@ class SportsDataIOClient:
         Returns:
             List of player prop objects
         """
-        return await self._request(f"PlayerPropsByWeek/{season}/{week}")
+        return await self._request(f"odds/json/PlayerPropsByWeek/{season}/{week}")
     
     async def get_player_props_by_game(
         self,
@@ -472,7 +508,7 @@ class SportsDataIOClient:
         Returns:
             List of player prop objects
         """
-        return await self._request(f"PlayerPropsByGameID/{game_id}")
+        return await self._request(f"odds/json/PlayerPropsByGameID/{game_id}")
     
     async def get_player_props_by_player(
         self,
@@ -491,7 +527,7 @@ class SportsDataIOClient:
         Returns:
             List of player prop objects
         """
-        return await self._request(f"PlayerPropsByPlayerID/{season}/{week}/{player_id}")
+        return await self._request(f"odds/json/PlayerPropsByPlayerID/{season}/{week}/{player_id}")
     
     # =========================================================================
     # Odds & Lines
@@ -512,7 +548,7 @@ class SportsDataIOClient:
         Returns:
             List of odds objects with spreads, moneylines, totals
         """
-        return await self._request(f"GameOddsByWeek/{season}/{week}")
+        return await self._request(f"odds/json/GameOddsByWeek/{season}/{week}")
     
     async def get_odds_by_game(
         self,
@@ -527,7 +563,7 @@ class SportsDataIOClient:
         Returns:
             List of odds objects from different sportsbooks
         """
-        return await self._request(f"GameOddsByGameID/{game_id}")
+        return await self._request(f"odds/json/GameOddsByGameID/{game_id}")
     
     # =========================================================================
     # News
@@ -540,7 +576,7 @@ class SportsDataIOClient:
         Returns:
             List of news article objects
         """
-        return await self._request("News")
+        return await self._request("scores/json/News")
     
     async def get_news_by_player(self, player_id: str) -> List[Dict[str, Any]]:
         """
@@ -552,7 +588,7 @@ class SportsDataIOClient:
         Returns:
             List of news article objects
         """
-        return await self._request(f"NewsByPlayerID/{player_id}")
+        return await self._request(f"scores/json/NewsByPlayerID/{player_id}")
     
     async def get_news_by_team(self, team_key: str) -> List[Dict[str, Any]]:
         """
@@ -564,7 +600,7 @@ class SportsDataIOClient:
         Returns:
             List of news article objects
         """
-        return await self._request(f"NewsByTeam/{team_key}")
+        return await self._request(f"scores/json/NewsByTeam/{team_key}")
     
     # =========================================================================
     # Utility Methods
